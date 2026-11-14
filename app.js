@@ -15,13 +15,19 @@ function toast(m){const t=document.createElement('div');t.className='toast';t.te
 
 function card(p){const d=p.discount>0;return `<div class="card"><div class="ph" data-act="open" data-id="${p.id}">${d?`<span class="badge">-${p.discount}%</span>`:''}${p.featured?'<span class="star">★ Destacado</span>':''}<img loading="lazy" src="${esc(im(p))}" alt="${esc(p.name)}"></div><div class="info"><small>${esc(p.category)}</small><h3>${esc(p.name)}</h3><div class="price"><b>${fmt(fin(p))}</b>${d?`<s>${fmt(p.price)}</s>`:''}</div><button class="btn sm" data-act="add" data-id="${p.id}">Agregar al carrito</button></div></div>`}
 
+function row(t,l,k){return `<section class="carw"><div class="sec"><h2>${esc(t)}</h2><div class="ctl"><button class="arr" data-act="slide" data-d="-1">‹</button><button class="arr" data-act="slide" data-d="1">›</button><button class="btn ghost sm" data-act="cat" data-k="${esc(k)}">Ver todo</button></div></div><div class="car">${l.map(card).join('')}</div></section>`}
 function store(){
   let L=C.products.filter(p=>(S.cat==='all'||(S.cat==='feat'?p.featured:p.category===S.cat))&&(!S.q||(p.name+p.description).toLowerCase().includes(S.q.toLowerCase())));
   const chips=[['all','Todo'],['feat','★ Destacados'],...C.categories.map(c=>[c,c])].map(([k,l])=>`<button class="chip ${S.cat===k?'on':''}" data-act="cat" data-k="${esc(k)}">${esc(l)}</button>`).join('');
+  let BODY;
+  if(S.cat==='all'&&!S.q){const f=C.products.filter(p=>p.featured);
+    BODY=(f.length?row('★ Destacados',f,'feat'):'')+C.categories.map(c=>{const l=C.products.filter(p=>p.category===c);return l.length?row(c,l,c):''}).join('');
+    if(!BODY)BODY='<div class="empty">Aún no hay productos 🌱</div>';
+  }else{BODY=`<div class="sec"><h2>${S.q?'Resultados':S.cat==='feat'?'★ Destacados':esc(S.cat)}</h2>${S.q?'':'<button class="btn ghost sm" data-act="cat" data-k="all">← Volver al inicio</button>'}</div>`+(L.length?`<div class="grid">${L.map(card).join('')}</div>`:'<div class="empty">Aún no hay productos aquí 🌱</div>')}
   return `<section class="hero wrap"><div><h1>Piezas únicas,<br>hechas capa por capa.</h1><p>Decoración, regalos y objetos útiles impresos en 3D con cariño. Elige tu favorito y pídelo por WhatsApp.</p><p><a href="#catalogo" class="btn" style="text-decoration:none;display:inline-block">Ver productos</a></p></div><div class="art"><img src="${C.logo}" alt="tros3d"></div></section>
   <main class="wrap" id="catalogo"><div class="sec"><h2>Categorías</h2></div><div class="chips">${chips}</div>
-  <div class="sec"><h2>${S.cat==='all'?'Todos los productos':S.cat==='feat'?'Destacados':esc(S.cat)}</h2><input class="search" data-act="q" placeholder="Buscar…" value="${esc(S.q)}"></div>
-  ${L.length?`<div class="grid">${L.map(card).join('')}</div>`:'<div class="empty">Aún no hay productos aquí 🌱</div>'}</main>
+  <div class="sec" style="margin-top:6px"><input class="search" data-act="q" placeholder="Buscar…" value="${esc(S.q)}"></div>
+  ${BODY}</main>
   <footer><div class="wrap">© tros3d · Impresiones 3D · <a href="https://wa.me/${WA}" style="color:inherit">WhatsApp 314 720 1255</a></div></footer>`}
 
 function modal(){const p=C.products.find(x=>x.id===S.view);if(!p)return'';const imgs=p.images&&p.images.length?p.images:[PH];const d=p.discount>0;
@@ -32,14 +38,15 @@ function drawer(){const items=Object.entries(S.cart).map(([id,q])=>[C.products.f
 
 
 function render(){
-  const y=window.scrollY,q=document.activeElement&&document.activeElement.dataset&&document.activeElement.dataset.act==='q';
+  const sl=[...document.querySelectorAll('.car')].map(c=>c.scrollLeft);const y=window.scrollY,q=document.activeElement&&document.activeElement.dataset&&document.activeElement.dataset.act==='q';
   $('#root').innerHTML=`<header><div class="wrap"><a class="brand" href="#" style="text-decoration:none;color:inherit"><img src="${C.logo}" alt="tros3d"><span>tros3d</span></a><button class="cartbtn" data-act="openD">🛒 Carrito${cnt()?`<b>${cnt()}</b>`:''}</button></div></header>${S.loading?'<div class="empty">Cargando…</div>':store()}<a class="fab" target="_blank" href="https://wa.me/${WA}?text=${encodeURIComponent('Hola tros3d! Quiero más información')}" aria-label="WhatsApp">${WAICON}</a>${S.view?modal():''}${S.drawer?drawer():''}`;
-  if(q){const i=$('.search');i.focus();i.setSelectionRange(i.value.length,i.value.length)}window.scrollTo(0,y);
+  if(q){const i=$('.search');i.focus();i.setSelectionRange(i.value.length,i.value.length)}document.querySelectorAll('.car').forEach((c,i)=>c.scrollLeft=sl[i]||0);window.scrollTo(0,y);
 }
 document.addEventListener('click',ev=>{
   const el=ev.target.closest('[data-act]');if(!el)return;const a=el.dataset.act,id=el.dataset.id;
   if(a==='close'&&el.classList.contains('ov')&&ev.target.closest('[data-stop]'))return;
-  if(a==='cat'){S.cat=el.dataset.k;render()}
+  if(a==='slide'){el.closest('.carw').querySelector('.car').scrollBy({left:+el.dataset.d*480,behavior:'smooth'})}
+  else if(a==='cat'){S.cat=el.dataset.k;S.q='';render();window.scrollTo({top:0})}
   else if(a==='open'){S.view=id;S.img=0;render()}
   else if(a==='close'){S.view=null;render()}
   else if(a==='img'){S.img=+el.dataset.i;render()}
