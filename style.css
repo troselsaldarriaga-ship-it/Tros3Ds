@@ -62,3 +62,7 @@ footer{margin-top:60px;padding:30px 0 90px;border-top:1px solid var(--line);colo
 .car{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 2px 14px;scrollbar-width:none;-webkit-overflow-scrolling:touch}.car::-webkit-scrollbar{display:none}
 .car .card{flex:0 0 232px;scroll-snap-align:start}
 @media(max-width:720px){.car .card{flex:0 0 62%}.arr{display:none}.car{margin:0 -14px;padding-left:14px;padding-right:14px;scroll-padding-left:14px}}
+
+.prev .t em{position:absolute;left:0;bottom:0;right:0;background:rgba(74,58,46,.85);color:#fff;font-size:.65rem;text-align:center;border-radius:0 0 12px 12px;font-style:normal}
+.prev .t.cover img{outline:3px solid var(--acc);outline-offset:-3px}
+.prev .t .st{top:-6px;left:-6px;right:auto;background:var(--acc2)}
